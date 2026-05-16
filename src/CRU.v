@@ -3,8 +3,7 @@
 module CRU(
    input  wire               clock,
    input  wire               reset,   // Added reset for control state initialization
-   input  wire               enable,  // Signal from StarCore-1 that a coprocessor instruction is ready
-   input  wire         [3:0] opcode,  // Opcode from StarCore-1 (Triggers on 4'b1010)
+   input  wire               enable,  // Signal from StarCore-1 indicating coprocessor should execute
    
    input  signed      [15:0] angle,   // Target angle for rotation
    input  signed      [15:0] Xin,     // Initial X coordinate
@@ -13,8 +12,7 @@ module CRU(
    output signed      [15:0] Xout,    // Final X rotated coordinate
    output signed      [15:0] Yout,    // Final Y rotated coordinate
    
-   output wire               busy,    // Notifies StarCore-1 that the CRU is processing
-   output wire               done     // Flags StarCore-1 that processing is finished and outputs are valid
+   output wire               done     // Boolean indicator: 0 = busy/idle, 1 = done (outputs valid)
 );
 
    //------------------------------------------------------------------------------
@@ -27,24 +25,22 @@ module CRU(
    //                    Coprocessor Control Path (StarCore-1 Interface)
    //------------------------------------------------------------------------------
    // valid_pipe tracks the active instruction as it flows through the 16 CORDIC stages.
-   // Instead of stalling the processor with a traditional state machine, a pipelined 
-   // design allows StarCore-1 to potentially issue a new CRU instruction every clock cycle.
+   // StarCore-1 decodes the opcode and simply asserts 'enable' to push a job into the pipeline.
    reg [STG-1:0] valid_pipe;
 
    always @(posedge clock or posedge reset) begin
       if (reset) begin
          valid_pipe <= 0;
       end else begin
-         // Inject a '1' into the pipeline if enabled and the opcode matches 1010.
-         // Shift existing valid bits down the pipeline parallel to the data.
-         valid_pipe <= {valid_pipe[STG-2:0], (enable && (opcode == 4'b1010))};
+         // Inject a '1' into the pipeline if enabled.
+         // Shift existing valid bits down the pipeline parallel to the data processing.
+         valid_pipe <= {valid_pipe[STG-2:0], enable};
       end
    end
 
-   // The CRU is 'busy' if any stage prior to the final output holds a valid instruction.
-   assign busy = |valid_pipe[STG-2:0];
-   
-   // 'done' is asserted when the instruction reaches the final stage, meaning Xout/Yout are ready.
+   // 'done' acts as a boolean indicator. 
+   // It is 0 while the data is flowing through the stages (busy/idle) 
+   // and asserts to 1 exactly when the calculation completes and Xout/Yout are ready.
    assign done = valid_pipe[STG-1];
 
 
@@ -143,7 +139,7 @@ module CRU(
    //                                 Data Output
    //------------------------------------------------------------------------------
    // Wire the final stage to the coprocessor outputs. These values should be read
-   // by StarCore-1 exactly when 'done' asserts high.
+   // by StarCore-1 exactly when 'done' is high.
    assign Xout = X[STG-1];
    assign Yout = Y[STG-1];
 

@@ -8,13 +8,11 @@ module cordic_test;
    reg               CLK_100MHZ;
    reg               reset;
    reg               enable;
-   reg         [3:0] opcode;
    reg signed [15:0] angle;
    reg signed [15:0] Xin, Yin;
    
    // Outputs from CRU
-   wire signed [15:0] Xout, Yout; // Updated to 16-bit from [SZ:0]
-   wire               busy;
+   wire signed [15:0] Xout, Yout;
    wire               done;
 
    // Waveform generator variables
@@ -26,18 +24,16 @@ module cordic_test;
 
    reg signed [63:0] i;
 
-   // Instantiate the newly adapted Coordinate Rotation Unit (CRU)
+   // Instantiate the Coordinate Rotation Unit (CRU)
    CRU dut (
       .clock(CLK_100MHZ),
       .reset(reset),
       .enable(enable),
-      .opcode(opcode),
       .angle(angle),
       .Xin(Xin),
       .Yin(Yin),
       .Xout(Xout),
       .Yout(Yout),
-      .busy(busy),
       .done(done)
    );
 
@@ -48,7 +44,6 @@ module cordic_test;
       CLK_100MHZ = 1'b0;
       reset      = 1'b1;
       enable     = 1'b0;
-      opcode     = 4'b0000;
       angle      = 16'd0;
       Xin        = VALUE; // Xout will be 32000*cos(angle)
       Yin        = 16'd0; // Yout will be 32000*sin(angle)
@@ -67,26 +62,23 @@ module cordic_test;
       
       // 1. Prepare data 
       // Calculate 16-bit angle: (angle_in_degrees / 360) * 2^16
-      // example: 45 deg = 45/360 * 2^16 = 8192 (16'h2000)
       angle = ((1 << 16) * i) / 360;    
       $display("Setting Angle = %d degrees, Hex = %h", i, angle);
 
-      // 2. Trigger the Coprocessor
+      // 2. Trigger the Coprocessor (StarCore-1 has already decoded opcode 1010)
       @(posedge CLK_100MHZ);
-      enable = TRUE;
-      opcode = 4'b1010; // StarCore-1 trigger opcode
+      enable = TRUE; 
 
       // 3. Clear trigger after one clock cycle (simulating a 1-cycle instruction issue)
       @(posedge CLK_100MHZ);
       enable = FALSE;
-      opcode = 4'b0000;
       
       // 4. Wait for the CRU to finish processing
-      $display("Waiting for CRU to process...");
-      wait(done == 1'b1);
+      $display("Waiting for CRU to process (done = 0)...");
+      wait(done == 1'b1); // When done asserts to 1, processing is complete
       
       // 5. Capture and display outputs
-      $display("Processing Finished!");
+      $display("Processing Finished! (done = 1)");
       $display("Outputs -> Xout (Cos): %d, Yout (Sin): %d", Xout, Yout);
 
       #500;
