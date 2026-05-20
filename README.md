@@ -18,41 +18,6 @@ that would otherwise require large look-up tables or expensive software loops.
 
 ---
 
-## Repository Structure
-
-```
-.
-├── src/                        # StarCore-1 processor source files
-│   ├── ALU.v                   # 16-bit Arithmetic & Logic Unit
-│   ├── ALU_Control.v           # ALU control decoder (6-bit casex)
-│   ├── ControlUnit.v           # Main control unit (opcode → signals)
-│   ├── DataMemory.v            # 8×16-bit synchronous RAM
-│   ├── Datapath.v              # Full processor datapath (integrates all above)
-│   ├── GPR.v                   # General Purpose Register File (8×16-bit)
-│   ├── InstructionMemory.v     # 16×16-bit ROM, loaded from test.prog
-│   ├── StarCore1.v             # Top-level: wires Datapath ↔ ControlUnit
-│   └── Parameter.v             # Shared compile-time parameters (`define macros)
-│
-├── coprocessor/                # CRU coprocessor files
-│   ├── CRU.v                   # Coordinate Rotation Unit (16-stage CORDIC pipeline)
-│   └── CRU_tb.v                # CRU testbench — simulates StarCore-1 interface
-│
-├── reference/                  # Original reference CORDIC (not synthesised)
-│   ├── codic.v                 # 32-bit, 31-stage CORDIC (Verilog reference)
-│   └── cordic_tb.v             # Reference CORDIC testbench
-│
-├── test/                       # Test vectors
-│   ├── test.prog               # StarCore-1 instruction memory (binary, one word/line)
-│   └── test.data               # StarCore-1 data memory   (binary, one word/line)
-│
-├── matlab/
-│   └── gold_standard.m         # IEEE 754 gold standard: cos/sin × 32000, timed
-│
-└── README.md                   # This file
-```
-
----
-
 ## CRU Design Summary
 
 | Parameter          | Value                                  |
