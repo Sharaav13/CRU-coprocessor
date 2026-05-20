@@ -20,10 +20,10 @@ that would otherwise require large look-up tables or expensive software loops.
 
 ## Repo Navigation
 
-\docs => PDF documentation on the CRU project, including its project report overview
-\src => contains all Verilog HDL files for the CRU, namely "CRU.v".
-\misc => contains legacy code (\legacy) and StarCore-1 Verilog files (\starcore1).
-\tb => conatins all testbench verliog files for the CRU, namely "CRU_tb.v".
+-\docs   =>   PDF documentation on the CRU project, including its project report overview
+-\src    =>   contains all Verilog HDL files for the CRU, namely "CRU.v".
+-\misc   =>   contains legacy code (\legacy) and StarCore-1 Verilog files (\starcore1).
+-\tb     =>   contains all testbench Verilog files for the CRU, namely "CRU_tb.v".
 
 ---
 
